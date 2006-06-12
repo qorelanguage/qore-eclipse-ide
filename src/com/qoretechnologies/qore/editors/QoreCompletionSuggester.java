@@ -80,10 +80,10 @@ public class QoreCompletionSuggester
 			}
 			else
 				if (e.getName().startsWith("constructor")) // save constructors
-															// as special
-															// methods
+				// as special
+				// methods
 				{
-					e.setName(className+"()");
+					e.setName(className + "()");
 					qoreFunctions.add(e);
 				}
 		}
@@ -111,6 +111,10 @@ public class QoreCompletionSuggester
 	private Collection<QoreCompletionElement> loadVariables(IDocument document, int offset, String prefix) throws BadLocationException
 	{
 		List<QoreCompletionElement> temp = new ArrayList<QoreCompletionElement>();
+		// these variables are accessible always: $ARGV, $QORE_ARGV and $ENV
+		temp.add(new QoreCompletionElement("$ARGV", "global variable $ARGV", CompletionDocbookLoader.getIcon(CompletionDocbookLoader.ICONTYPE.VARIABLE)));
+		temp.add(new QoreCompletionElement("$QORE_ARGV", "global variable $QORE_ARGV", CompletionDocbookLoader.getIcon(CompletionDocbookLoader.ICONTYPE.VARIABLE)));
+		temp.add(new QoreCompletionElement("$ENV", "global variable $ENV", CompletionDocbookLoader.getIcon(CompletionDocbookLoader.ICONTYPE.VARIABLE)));
 
 		Collection<QoreCompletionElement> classVars = loadVariablesByRegex(document, offset, prefix, "(\\$\\w*).*=.*new\\s*(\\w*)", true);
 		for (Iterator<QoreCompletionElement> i = classVars.iterator(); i.hasNext();)
@@ -226,23 +230,29 @@ public class QoreCompletionSuggester
 	@SuppressWarnings("unchecked")
 	public Collection<ICompletionProposal> getProposals(IDocument document, int offset) throws BadLocationException
 	{
-		String line = document.get(document.getLineInformationOfOffset(offset).getOffset(), document.getLineInformationOfOffset(offset).getLength());
 		int lastWordStartOffset = getLastWordStartOffset(document, offset);
+		String entireLine = document.get(document.getLineInformationOfOffset(offset).getOffset(), document.getLineInformationOfOffset(offset).getLength());
 		String prefix = document.get(lastWordStartOffset, offset - lastWordStartOffset);
-		String afterCursor = getPartAfterCursor(document, offset);
+		String textAfterCursor = getPartAfterCursor(document, offset);
 
 		// load variables suggestions from current document
 		ArrayList searchTerms = new ArrayList(qoreFunctions);
 		qoreVariables = loadVariables(document, offset, prefix);
 		searchTerms.addAll(qoreVariables);
 
-		if (prefix.startsWith("$") && prefix.indexOf(".")!=-1) // search for class
-			//if (prefix.startsWith("$") && prefix.endsWith(".")) // search for class
-		// methods
+		if (prefix.startsWith("$") && prefix.indexOf(".") != -1) // search
+		// for
+		// class methods
 		{
 			Collection<ICompletionProposal> results = new ArrayList<ICompletionProposal>();
 			Iterator<QoreCompletionElement> i = searchTerms.iterator();
-			prefix = prefix.substring(0, prefix.length() - 1);
+			int dotOffset = prefix.indexOf(".");
+			lastWordStartOffset += dotOffset;// last offset is in this case
+												// the start of the method name
+			String methodStart = "";
+			if (dotOffset < prefix.length())
+				methodStart = prefix.substring(dotOffset + 1, prefix.length());
+			prefix = prefix.substring(0, dotOffset);
 
 			while (i.hasNext())
 			{
@@ -251,9 +261,20 @@ public class QoreCompletionSuggester
 				{
 					ArrayList<QoreCompletionElement> methods = classMethods.get(qe.getClassName());
 					if (methods != null)
-						for (QoreCompletionElement e : methods)
+						for (QoreCompletionElement method : methods)
 						{
-							results.add(new CompletionProposal(e.getName(), offset, 0, e.getName().length(), e.getImage(), e.getName(), null, e.getDescription()));
+							if (method.getName().startsWith(methodStart))							{
+								if (textAfterCursor.startsWith("(")) // e.g.
+																	// substr|(
+								{
+									String noParentheses = method.getName().substring(0, method.getName().length() - 2);
+									results.add(new CompletionProposal(noParentheses, offset - methodStart.length(), methodStart.length(), noParentheses.length(), method
+											.getImage(), method.getName(), null, method.getDescription()));
+								}
+								else
+									results.add(new CompletionProposal(method.getName(), offset - methodStart.length(), methodStart.length(), method.getName().length(), method
+											.getImage(), method.getName(), null, method.getDescription()));
+							}
 						}
 				}
 			}
@@ -277,12 +298,12 @@ public class QoreCompletionSuggester
 					else
 						cursorAfter = qe.getName().length();
 
-					if (line.trim().equals("")) // 1_empty_line
+					if (entireLine.trim().equals("")) // 1_empty_line
 					{
 						results.add(new CompletionProposal(qe.getName(), offset, 0, cursorAfter, qe.getImage(), qe.getName(), null, qe.getDescription()));
 					}
 					else
-						if (!prefix.trim().equals("") && afterCursor.trim().equals("")) // 2_line_end
+						if (!prefix.trim().equals("") && textAfterCursor.trim().equals("")) // 2_line_end
 						{
 							results.add(new CompletionProposal(qe.getName(), lastWordStartOffset, prefix.length(), cursorAfter, qe.getImage(), qe.getName(), null, qe
 									.getDescription()));
@@ -290,18 +311,18 @@ public class QoreCompletionSuggester
 						else
 						// somewhere in the middle
 						{
-							if (afterCursor.startsWith("(")) // e.g. substr|(
+							if (textAfterCursor.startsWith("(")) // e.g. substr|(
 							{
-									String noParentheses = qe.getName().substring(0, qe.getName().length() - 2);
-									results.add(new CompletionProposal(noParentheses, lastWordStartOffset, prefix.length(), noParentheses.length(), qe.getImage(), qe.getName(),
-											null, qe.getDescription()));
+								String noParentheses = qe.getName().substring(0, qe.getName().length() - 2);
+								results.add(new CompletionProposal(noParentheses, lastWordStartOffset, prefix.length(), noParentheses.length(), qe.getImage(), qe.getName(), null,
+										qe.getDescription()));
 							}
 							else
 							{
-								if (afterCursor.indexOf("(") != -1) // e.g.s|ubstr(
+								if (textAfterCursor.indexOf("(") != -1) // e.g.s|ubstr(
 								{
 									String noParentheses = qe.getName().substring(0, qe.getName().length() - 2);
-									int replaceLength = (offset - lastWordStartOffset) + afterCursor.indexOf("(");
+									int replaceLength = (offset - lastWordStartOffset) + textAfterCursor.indexOf("(");
 									results.add(new CompletionProposal(noParentheses, lastWordStartOffset, replaceLength, noParentheses.length(), qe.getImage(), qe.getName(),
 											null, qe.getDescription()));
 								}

@@ -13,6 +13,18 @@ public class QoreCompletionElement implements Comparable
 	private String className;
 
 	private boolean classMethod;
+	
+	public QoreCompletionElement()
+	{
+	}
+
+	public QoreCompletionElement(String name, String description, org.eclipse.swt.graphics.Image image )
+	{
+		this.name = name;
+		this.description = description;
+		this.image = image;
+	}
+	
 
 	public boolean isClassMethod() {
 		return classMethod;

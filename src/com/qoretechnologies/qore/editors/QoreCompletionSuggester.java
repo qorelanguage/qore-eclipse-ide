@@ -144,6 +144,25 @@ public class QoreCompletionSuggester
 		return temp;
 	}
 
+	private int getBracketCount(FindReplaceDocumentAdapter finder, int currentOffset, int startOffset, String regexBracket) throws BadLocationException
+	{
+		IRegion bracketRegion = null;
+		int bracketCount = 0;
+		int lastOffsetForBrackets = currentOffset;
+		do
+		{
+			bracketRegion = finder.find(lastOffsetForBrackets, regexBracket, false, false, false, true);
+			if (bracketRegion != null)
+			{
+				lastOffsetForBrackets = bracketRegion.getOffset() - 1; // bracket.getLength('{')
+				if (lastOffsetForBrackets > startOffset)
+					bracketCount++;
+			}
+		}
+		while (bracketRegion != null && lastOffsetForBrackets > startOffset);
+		return bracketCount;
+	}
+
 	private Collection<QoreCompletionElement> loadVariablesByRegex(IDocument document, int offset, String prefix, String regex, boolean searchContextOffset)
 			throws BadLocationException
 	{
@@ -152,13 +171,24 @@ public class QoreCompletionSuggester
 
 		IRegion var = null;
 		int lastOffset = 0;
+		boolean isInsideSub = false;
 
-		// search from last method definition
+		// search from last sub/method definition
 		if (searchContextOffset)
 		{
 			var = finder.find(offset, "sub\\s.*\\)", false, false, false, true);
 			if (var != null)
 				lastOffset = var.getOffset();
+
+			// now try to find find out if we are inside a sub or not
+			int openingBrackets = getBracketCount(finder, offset, lastOffset, "\\{");
+			int closingBrackets = getBracketCount(finder, offset, lastOffset, "\\}");
+			if (openingBrackets > closingBrackets) // then we are inside of a
+													// sub/method
+			{
+				isInsideSub = true;
+				temp.add(new QoreCompletionElement("$argv", "local variable $argv", CompletionDocbookLoader.getIcon(CompletionDocbookLoader.ICONTYPE.VARIABLE)));
+			}
 		}
 
 		do
@@ -181,22 +211,25 @@ public class QoreCompletionSuggester
 					className = matcher.group(2);
 			}
 			// do not include ST $Id or trailing $ or the just written new
-			// variable
-			if (!varName.equals("$") && !varName.toLowerCase().equals("$id") && !varName.equals(prefix))
+			// variable or any variable found after current cursor position
+			if (!varName.equals("$") && !varName.toLowerCase().equals("$id") && !varName.equals(prefix) && lastOffset < offset)
 			{
-				QoreCompletionElement qe = new QoreCompletionElement();
-				qe.setName(varName);
-				if (className.equals(""))
-					qe.setDescription("variable " + varName);
-				else
+				if (searchContextOffset && isInsideSub)
 				{
-					qe.setDescription("instance of " + className + " class");
-					qe.setClassName(className);
-				}
-				qe.setImage(CompletionDocbookLoader.getIcon(CompletionDocbookLoader.ICONTYPE.VARIABLE));
-				if (!temp.contains(qe))
-				{
-					temp.add(qe);
+					QoreCompletionElement qe = new QoreCompletionElement();
+					qe.setName(varName);
+					if (className.equals(""))
+						qe.setDescription("variable " + varName);
+					else
+					{
+						qe.setDescription("instance of " + className + " class");
+						qe.setClassName(className);
+					}
+					qe.setImage(CompletionDocbookLoader.getIcon(CompletionDocbookLoader.ICONTYPE.VARIABLE));
+					if (!temp.contains(qe))
+					{
+						temp.add(qe);
+					}
 				}
 			}
 		}
@@ -248,7 +281,7 @@ public class QoreCompletionSuggester
 			Iterator<QoreCompletionElement> i = searchTerms.iterator();
 			int dotOffset = prefix.indexOf(".");
 			lastWordStartOffset += dotOffset;// last offset is in this case
-												// the start of the method name
+			// the start of the method name
 			String methodStart = "";
 			if (dotOffset < prefix.length())
 				methodStart = prefix.substring(dotOffset + 1, prefix.length());
@@ -263,9 +296,10 @@ public class QoreCompletionSuggester
 					if (methods != null)
 						for (QoreCompletionElement method : methods)
 						{
-							if (method.getName().startsWith(methodStart))							{
+							if (method.getName().startsWith(methodStart))
+							{
 								if (textAfterCursor.startsWith("(")) // e.g.
-																	// substr|(
+								// substr|(
 								{
 									String noParentheses = method.getName().substring(0, method.getName().length() - 2);
 									results.add(new CompletionProposal(noParentheses, offset - methodStart.length(), methodStart.length(), noParentheses.length(), method
@@ -311,7 +345,8 @@ public class QoreCompletionSuggester
 						else
 						// somewhere in the middle
 						{
-							if (textAfterCursor.startsWith("(")) // e.g. substr|(
+							if (textAfterCursor.startsWith("(")) // e.g.
+																	// substr|(
 							{
 								String noParentheses = qe.getName().substring(0, qe.getName().length() - 2);
 								results.add(new CompletionProposal(noParentheses, lastWordStartOffset, prefix.length(), noParentheses.length(), qe.getImage(), qe.getName(), null,

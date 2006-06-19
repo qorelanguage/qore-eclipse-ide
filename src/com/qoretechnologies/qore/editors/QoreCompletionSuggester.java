@@ -214,7 +214,7 @@ public class QoreCompletionSuggester
 			// variable or any variable found after current cursor position
 			if (!varName.equals("$") && !varName.toLowerCase().equals("$id") && !varName.equals(prefix) && lastOffset < offset)
 			{
-				if (searchContextOffset && isInsideSub)
+				if ( (searchContextOffset && isInsideSub) || !searchContextOffset)
 				{
 					QoreCompletionElement qe = new QoreCompletionElement();
 					qe.setName(varName);
@@ -265,7 +265,16 @@ public class QoreCompletionSuggester
 	{
 		int lastWordStartOffset = getLastWordStartOffset(document, offset);
 		String entireLine = document.get(document.getLineInformationOfOffset(offset).getOffset(), document.getLineInformationOfOffset(offset).getLength());
-		String prefix = document.get(lastWordStartOffset, offset - lastWordStartOffset);
+		String prefix;
+		if(offset>0 && lastWordStartOffset!=-1)
+		{
+			prefix = document.get(lastWordStartOffset, offset - lastWordStartOffset);
+		}
+		else
+		{
+			prefix = document.get(0, offset);
+			lastWordStartOffset = 0;
+		}
 		String textAfterCursor = getPartAfterCursor(document, offset);
 
 		// load variables suggestions from current document

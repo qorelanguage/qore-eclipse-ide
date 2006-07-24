@@ -15,6 +15,8 @@ import org.eclipse.jface.text.rules.Token;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.jface.text.source.SourceViewerConfiguration;
 
+import com.qoretechnologies.qore.completion.QoreCompletionProcessor;
+
 public class QoreConfiguration extends SourceViewerConfiguration {
 	private QoreDoubleClickStrategy doubleClickStrategy;
 

@@ -1,23 +1,50 @@
 package com.qoretechnologies.qore.outline;
 
+import org.eclipse.jface.text.IDocument;
+
 public class TreeItem
 {
-	public enum ITEM_TYPE { FUNCTION, VARIABLE, CONSTANT, NAMESPACE, CLASS };
+	public enum ITEM_TYPE
+	{
+		FUNCTION, VARIABLE, CONSTANT, NAMESPACE, CLASS
+	};
+
 	private ITEM_TYPE type;
+
 	private String name;
+
 	private String desc;
+
 	private int offset;
+
 	private int length;
-	
+
+	private IDocument parentDoc;
+
 	public TreeItem()
 	{
 	}
 
-	public TreeItem(ITEM_TYPE type, String name, String description)
+	@Override
+	public boolean equals(Object obj)
+	{
+		if (!(obj instanceof TreeItem))
+			return false;
+
+		TreeItem t = (TreeItem) obj;
+		if (t.getName() == this.getName() && t.getDesc() == this.getDesc() && t.getLength() == this.getLength() && t.getOffset() == this.getOffset()
+				&& t.getParentDoc() == t.getParentDoc() && t.getType() == this.getType())
+			return true;
+		else
+			return false;
+	}
+
+	public TreeItem(IDocument parentDoc, ITEM_TYPE type, String name, String description)
 	{
 		this.type = type;
 		this.name = name;
 		this.desc = description;
+		this.parentDoc = parentDoc;
 	}
 
 	public String getDesc()
@@ -69,6 +96,15 @@ public class TreeItem
 	{
 		this.offset = offset;
 	}
-	
+
+	public IDocument getParentDoc()
+	{
+		return parentDoc;
+	}
+
+	public void setParentDoc(IDocument parentDoc)
+	{
+		this.parentDoc = parentDoc;
+	}
 
 }

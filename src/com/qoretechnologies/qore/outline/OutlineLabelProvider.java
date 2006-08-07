@@ -28,6 +28,18 @@ public class OutlineLabelProvider implements ILabelProvider
 				{
 					return ResourceLoader.getIcon(ResourceLoader.ICONTYPE.FUNCTION);
 				}
+				if (((TreeItem) element).getType() == TreeItem.ITEM_TYPE.CONSTANT)
+				{
+					return ResourceLoader.getIcon(ResourceLoader.ICONTYPE.CONSTANT);
+				}
+				if (((TreeItem) element).getType() == TreeItem.ITEM_TYPE.NAMESPACE)
+				{
+					return ResourceLoader.getIcon(ResourceLoader.ICONTYPE.NAMESPACE);
+				}
+				if (((TreeItem) element).getType() == TreeItem.ITEM_TYPE.CLASS)
+				{
+					return ResourceLoader.getIcon(ResourceLoader.ICONTYPE.CLASS);
+				}
 			}
 			catch (Exception e)
 			{

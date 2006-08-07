@@ -160,16 +160,15 @@ public class QoreCompletionSuggester
 		// search from last sub/method definition
 		if (searchContextOffset)
 		{
-			// find previous function definition 
+			// find previous function definition
 			var = finder.find(offset, "sub\\s.*\\)", false, false, false, true);
 			if (var != null)
 				lastOffset = var.getOffset();
 
 			// now try to find find out if we are inside a sub or not
-			int openingBrackets = ParserHelper.getBracketCount(finder, offset, lastOffset, "\\{");
-			int closingBrackets = ParserHelper.getBracketCount(finder, offset, lastOffset, "\\}");
-			if (openingBrackets > closingBrackets) // then we are inside of a
-													// sub/method
+			int openingBrackets = ParserHelper.getBracketCountBackwards(finder, offset, lastOffset, "\\{");
+			int closingBrackets = ParserHelper.getBracketCountBackwards(finder, offset, lastOffset, "\\}");
+			if (openingBrackets > closingBrackets) // the we are inside of a sub
 			{
 				isInsideSub = true;
 				temp.add(new QoreCompletionElement("$argv", "local variable $argv", ResourceLoader.getIcon(ResourceLoader.ICONTYPE.VARIABLE)));
@@ -199,7 +198,7 @@ public class QoreCompletionSuggester
 			// variable or any variable found after current cursor position
 			if (!varName.equals("$") && !varName.toLowerCase().equals("$id") && !varName.equals(prefix) && lastOffset < offset)
 			{
-				if ( (searchContextOffset && isInsideSub) || !searchContextOffset)
+				if ((searchContextOffset && isInsideSub) || !searchContextOffset)
 				{
 					QoreCompletionElement qe = new QoreCompletionElement();
 					qe.setName(varName);
@@ -251,7 +250,7 @@ public class QoreCompletionSuggester
 		int lastWordStartOffset = getLastWordStartOffset(document, offset);
 		String entireLine = document.get(document.getLineInformationOfOffset(offset).getOffset(), document.getLineInformationOfOffset(offset).getLength());
 		String prefix;
-		if(offset>0 && lastWordStartOffset!=-1)
+		if (offset > 0 && lastWordStartOffset != -1)
 		{
 			prefix = document.get(lastWordStartOffset, offset - lastWordStartOffset);
 		}
@@ -340,7 +339,7 @@ public class QoreCompletionSuggester
 						// somewhere in the middle
 						{
 							if (textAfterCursor.startsWith("(")) // e.g.
-																	// substr|(
+							// substr|(
 							{
 								String noParentheses = qe.getName().substring(0, qe.getName().length() - 2);
 								results.add(new CompletionProposal(noParentheses, lastWordStartOffset, prefix.length(), noParentheses.length(), qe.getImage(), qe.getName(), null,

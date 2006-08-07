@@ -23,23 +23,24 @@ import com.qoretechnologies.qore.completion.QoreCompletionElement;
 
 public class ResourceLoader
 {
-	private Image ICON_FUNCTION, ICON_VARIABLE;
+	private Image ICON_FUNCTION, ICON_VARIABLE, ICON_CONSTANT, ICON_NAMESPACE, ICON_CLASS;
 
 	private static HashMap<ICONTYPE, Image> icons;
 
 	public enum ICONTYPE
 	{
-		FUNCTION, VARIABLE
+		FUNCTION, VARIABLE, CONSTANT, NAMESPACE, CLASS
 	};
-	
+
 	/**
-	 * Ensure that even if the object is not explicitly constructed, the getIcon() method will work.
+	 * Ensure that even if the object is not explicitly constructed, the
+	 * getIcon() method will work.
 	 */
 	static
 	{
-	  new ResourceLoader();	
+		new ResourceLoader();
 	}
-	
+
 	public ResourceLoader()
 	{
 		try
@@ -53,6 +54,18 @@ public class ResourceLoader
 			is = getClass().getResourceAsStream("/com/qoretechnologies/qore/editors/resources/dot_variable.gif");
 			ICON_VARIABLE = new Image(Display.getDefault(), is);
 			icons.put(ICONTYPE.VARIABLE, ICON_VARIABLE);
+
+			is = getClass().getResourceAsStream("/com/qoretechnologies/qore/editors/resources/dot_constant.gif");
+			ICON_CONSTANT = new Image(Display.getDefault(), is);
+			icons.put(ICONTYPE.CONSTANT, ICON_CONSTANT);
+
+			is = getClass().getResourceAsStream("/com/qoretechnologies/qore/editors/resources/dot_namespace.gif");
+			ICON_NAMESPACE = new Image(Display.getDefault(), is);
+			icons.put(ICONTYPE.NAMESPACE, ICON_NAMESPACE);
+
+			is = getClass().getResourceAsStream("/com/qoretechnologies/qore/editors/resources/dot_class.gif");
+			ICON_CLASS = new Image(Display.getDefault(), is);
+			icons.put(ICONTYPE.CLASS, ICON_CLASS);
 		}
 		catch (Exception e)
 		{

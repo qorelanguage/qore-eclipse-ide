@@ -95,9 +95,16 @@ public class OutlineContentProvider implements ITreeContentProvider
 				}
 				catch (BadLocationException e)
 				{
+					e.printStackTrace();
 					endOfBlockOffset = doc.getLength();
 				}
+				
 				List consts = getChildElements(doc, "const\\s*(\\w*).*=.*", ((TreeItem) parentElement).getOffset(), endOfBlockOffset, TreeItem.ITEM_TYPE.CONSTANT);
+				List methods = getTopElements(doc, "\\s*.*" + ((TreeItem) parentElement).getName() + "::(\\w+\\(.*\\))", 0, doc.getLength(), TreeItem.ITEM_TYPE.FUNCTION,true);
+				List nestedMethods = getChildElements(doc, "\\s*\\w+\\(.*\\)\\s*$", ((TreeItem) parentElement).getOffset(), endOfBlockOffset, TreeItem.ITEM_TYPE.FUNCTION);
+				
+				results.addAll(methods);
+				results.addAll(nestedMethods);
 				results.addAll(consts);
 				return results.toArray();
 			}

@@ -43,7 +43,8 @@ public class ParserHelper
 
 	/**
 	 * Return the offset of last closing bracket of the block starting from
-	 * fromOffset.
+	 * fromOffset. A semicolon is also considered as end of a block, e.g. when defining a class like 
+	 * class OMQ::SomeClass; the methods follow not directly in a {} block, but are defined elsewhere. 
 	 * 
 	 * @param finder
 	 * @param fromOffset
@@ -56,12 +57,30 @@ public class ParserHelper
 		int endOffset = fromOffset;
 		IRegion bracketReg = null;
         int opening = 0, closing = 0;
+        int nextSemicolOffset = -1;
+        boolean semicolFound = false;
         
+		bracketReg = finder.find(fromOffset, ";", true, false, false, false);
+		if(bracketReg!=null)
+		{
+			nextSemicolOffset = bracketReg.getOffset();
+			semicolFound = true;
+		}
+		
 		do
 		{
 			bracketReg = finder.find(endOffset, "[{}]", true, false, false, true);
 			if (bracketReg != null)
 			{
+				// if the next semicolon comes before first {, consider it as and of block
+				if(semicolFound==true && bracketReg.getOffset() > nextSemicolOffset)
+				{
+					endOffset = nextSemicolOffset;
+					break;
+				}
+				else // ignore the other semicolons inside {} block
+					semicolFound = false;  
+				
 				switch (doc.getChar(bracketReg.getOffset()))
 				{
 					case '{':  opening++; break;

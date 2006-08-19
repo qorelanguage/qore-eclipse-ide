@@ -11,13 +11,13 @@ public class QoreScanner extends RuleBasedScanner {
 
 	private static String[] qKeywords = { 
 		"background", "break", "case", "catch", 
-		"class", "const", "continue", "context", "delete", "do", 
-		"elements", "else", "exists", "for", "foreach", "if", "in", 
-		"inherits", "keys", "my", "namespace", "new", "NOTHING", 
-		"NULL", "our", "rethrow", "sub", "thread_exit", "where", 
-		"private", "return", "sortBy", "sortDescendingBy", "switch", 
-		"subcontext", "summarize", "synchronized", "throw", "try", "while",
-		"splice", "push", "pop", "shift", "unshift"
+		"class", "const", "continue", "context", "default",
+		"delete", "do", "elements", "else", "exists", "for", "foreach", "if", "in", 
+		"inherits", "instanceof", "keys", "my", "namespace", "new", "NOTHING", 
+		"NULL", "our", "pop", "private", "push", "rethrow", "return", 
+		"splice", "shift", "sortBy", "sortDescendingBy", "switch", "sub", 
+		"subcontext", "summarize", "synchronized", "thread_exit", 
+		"throw", "try", "unshift", "where", "while",
 	}; 
 
 	public QoreScanner(ColorManager manager) {

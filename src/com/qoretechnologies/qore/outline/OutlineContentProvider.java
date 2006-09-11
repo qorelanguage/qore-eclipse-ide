@@ -50,22 +50,24 @@ public class OutlineContentProvider implements ITreeContentProvider
 			IDocument doc = ((TreeItem) parentElement).getParentDoc();
 			FindReplaceDocumentAdapter finder = new FindReplaceDocumentAdapter(doc);
 			ArrayList results = new ArrayList();
-			
+
+			// find the length of the class in document
+			int endOfBlockOffset = 0;
+			try
+			{
+				endOfBlockOffset = ParserHelper.getNextBracketBlock(doc, finder, ((TreeItem) parentElement).getOffset());
+			}
+			catch (BadLocationException e)
+			{
+				e.printStackTrace();
+				endOfBlockOffset = doc.getLength();
+			}
+
 			if (((TreeItem) parentElement).getType() == TreeItem.ITEM_TYPE.NAMESPACE)
 			{
-				// find the length of the namespace in document
-				int endOfBlockOffset = 0;
-				try
-				{
-					endOfBlockOffset = ParserHelper.getNextBracketBlock(doc, finder, ((TreeItem) parentElement).getOffset());
-				}
-				catch (BadLocationException e)
-				{
-					endOfBlockOffset = doc.getLength();
-				}
-
 				List namespaces = getChildElements(doc, "\\s*namespace\\s*(\\w*)", ((TreeItem) parentElement).getOffset(), endOfBlockOffset, TreeItem.ITEM_TYPE.NAMESPACE);
-				List<TreeItem> classes = getTopElements(doc, "\\s*class\\s*.*" + ((TreeItem) parentElement).getName() + "::(\\w*)[^:\\w]", 0, doc.getLength(), TreeItem.ITEM_TYPE.CLASS,true);
+				List<TreeItem> classes = getTopElements(doc, "\\s*class\\s*.*" + ((TreeItem) parentElement).getName() + "::(\\w*)[^:\\w]", 0, doc.getLength(),
+						TreeItem.ITEM_TYPE.CLASS, true);
 				List<TreeItem> nestedClasses = getChildElements(doc, "\\s*class\\s*(\\w*)", ((TreeItem) parentElement).getOffset(), endOfBlockOffset, TreeItem.ITEM_TYPE.CLASS);
 				// the context in which is to be searched is determined by
 				// parentElement.getOffset()
@@ -74,12 +76,12 @@ public class OutlineContentProvider implements ITreeContentProvider
 				results.addAll(namespaces);
 				for (TreeItem t : classes)
 				{
-					if(!results.contains(t))
+					if (!results.contains(t))
 						results.add(t);
 				}
 				for (TreeItem t : nestedClasses)
 				{
-					if(!results.contains(t))
+					if (!results.contains(t))
 						results.add(t);
 				}
 				results.addAll(consts);
@@ -87,22 +89,9 @@ public class OutlineContentProvider implements ITreeContentProvider
 			}
 			if (((TreeItem) parentElement).getType() == TreeItem.ITEM_TYPE.CLASS)
 			{
-				// find the length of the class in document
-				int endOfBlockOffset = 0;
-				try
-				{
-					endOfBlockOffset = ParserHelper.getNextBracketBlock(doc, finder, ((TreeItem) parentElement).getOffset());
-				}
-				catch (BadLocationException e)
-				{
-					e.printStackTrace();
-					endOfBlockOffset = doc.getLength();
-				}
-				
 				List consts = getChildElements(doc, "const\\s*(\\w*).*=.*", ((TreeItem) parentElement).getOffset(), endOfBlockOffset, TreeItem.ITEM_TYPE.CONSTANT);
-				List methods = getTopElements(doc, "\\s*.*" + ((TreeItem) parentElement).getName() + "::(\\w+\\(.*\\))", 0, doc.getLength(), TreeItem.ITEM_TYPE.FUNCTION,true);
-				List nestedMethods = getChildElements(doc, "\\s*\\w+\\(.*\\)\\s*$", ((TreeItem) parentElement).getOffset(), endOfBlockOffset, TreeItem.ITEM_TYPE.FUNCTION);
-				
+				List methods = getTopElements(doc, "\\s*.*" + ((TreeItem) parentElement).getName() + "::(\\w+\\(.*\\))", 0, doc.getLength(), TreeItem.ITEM_TYPE.FUNCTION, true);
+				List nestedMethods = getChildElements(doc, "\\s*(\\w+\\(.*\\))", ((TreeItem) parentElement).getOffset(), endOfBlockOffset, TreeItem.ITEM_TYPE.FUNCTION);
 				results.addAll(methods);
 				results.addAll(nestedMethods);
 				results.addAll(consts);
@@ -165,46 +154,52 @@ public class OutlineContentProvider implements ITreeContentProvider
 				{
 					lastOffset = var.getOffset() + var.getLength();
 
-					int openingBrackets = ParserHelper.getBracketCountBackwards(finder, lastOffset, fromOffset, "\\{");
-					int closingBrackets = ParserHelper.getBracketCountBackwards(finder, lastOffset, fromOffset, "\\}");
+					//int openingBrackets = ParserHelper.getBracketCountBackwards(finder, lastOffset, fromOffset, "\\{");
+					//int closingBrackets = ParserHelper.getBracketCountBackwards(finder, lastOffset, fromOffset, "\\}");
+					int openingBrackets = ParserHelper.getBracketCountBackwards(doc, lastOffset, fromOffset, '{');
+					int closingBrackets = ParserHelper.getBracketCountBackwards(doc, lastOffset, fromOffset, '}');
 
-					String text = doc.get(var.getOffset(), var.getLength());
-					// use the group from regex as label for the tree item
-					Matcher matcher = p.matcher(text);
-					matcher.matches(); // will match always, we just need
-					// capture the group
-					if (matcher.groupCount() > 0)
-						text = matcher.group(1).trim();
-					else
-						text = text.substring(text.indexOf(" ")).trim();
-
-					// show first children level
-					if (openingBrackets-closingBrackets==1)
+					IRegion lineInfo = doc.getLineInformationOfOffset(lastOffset);
+					String line = doc.get(lineInfo.getOffset(), lineInfo.getLength());
+					if (!line.trim().startsWith("#"))
 					{
-						TreeItem temp = new TreeItem(doc, type, text, text);
-						// set offset at the start of the word (ignore the
-						// whitespace before it)
-						temp.setOffset(var.getOffset() + (var.getLength() - text.length()));
-						temp.setLength(var.getLength());
-						results.add(temp);
+						String text = doc.get(var.getOffset(), var.getLength());
+						// use the group from regex as label for the tree item
+						Matcher matcher = p.matcher(text);
+						matcher.matches(); // will match always, we just need
+						// capture the group
+						if (matcher.groupCount() > 0)
+							text = matcher.group(1).trim();
+
+						// show only first level children 
+						if (openingBrackets - closingBrackets == 1 && !text.trim().equals(""))
+						{
+							TreeItem temp = new TreeItem(doc, type, text, text);
+							// set offset at the start of the word (ignore the
+							// whitespace before it)
+							temp.setOffset(var.getOffset() + (var.getLength() - text.length()));
+							temp.setLength(var.getLength());
+							results.add(temp);
+						}
 					}
 				}
 			}
-			catch (BadLocationException e)
+			catch (Exception e)
 			{
 				e.printStackTrace();
 			}
 		}
 		while (var != null && var.getOffset() + var.getLength() < toOffset);
+
 		return results;
 	}
 
 	private List getTopElements(IDocument doc, String regex, int fromOffset, int toOffset, TreeItem.ITEM_TYPE type)
 	{
-		return getTopElements(doc,regex,fromOffset, toOffset, type, false);
+		return getTopElements(doc, regex, fromOffset, toOffset, type, false);
 	}
 
-	 /**
+	/**
 	 * 
 	 * @param inputElement
 	 * @param regex
@@ -227,47 +222,55 @@ public class OutlineContentProvider implements ITreeContentProvider
 		FindReplaceDocumentAdapter finder = new FindReplaceDocumentAdapter(doc);
 		int lastOffset = fromOffset;
 		Pattern p = Pattern.compile(regex);
-
+		
 		IRegion var = null;
 		do
 		{
 			try
 			{
 				boolean isInsideBrackets = false;
-				var = finder.find(lastOffset, regex, true, false, false, true);
+				var = finder.find(lastOffset, regex, true, true, false, true);
 				if (var != null && var.getOffset() + var.getLength() < toOffset)
 				{
 					lastOffset = var.getOffset() + var.getLength();
 
 					// now try to find find out if we in the top level (not
 					// inside of any namespace or class)
-					int openingBrackets = ParserHelper.getBracketCountBackwards(finder, lastOffset, 0, "\\{");
-					int closingBrackets = ParserHelper.getBracketCountBackwards(finder, lastOffset, 0, "\\}");
+					//int openingBrackets = ParserHelper.getBracketCountBackwards(finder, lastOffset, 0, "\\{");
+					//int closingBrackets = ParserHelper.getBracketCountBackwards(finder, lastOffset, 0, "\\}");
+					int openingBrackets = ParserHelper.getBracketCountBackwards(doc, lastOffset, 0, '{');
+					int closingBrackets = ParserHelper.getBracketCountBackwards(doc, lastOffset, 0, '}');
 					if (openingBrackets != closingBrackets)
 						isInsideBrackets = true;
 
-					String text = doc.get(var.getOffset(), var.getLength());
-					// use the group from regex as label for the tree item
-					Matcher matcher = p.matcher(text);
-					matcher.matches(); // will match always, we just need
-					// capture the group
-					if (matcher.groupCount() > 0)
-						text = matcher.group(1).trim();
-					else
-						text = text.substring(text.indexOf(" ")).trim();
-
-					if (!isInsideBrackets || ignoreBrackets)
+					IRegion lineInfo = doc.getLineInformationOfOffset(lastOffset);
+					String line = doc.get(lineInfo.getOffset(), lineInfo.getLength());
+						
+					if (!line.trim().startsWith("#"))
 					{
-						TreeItem temp = new TreeItem(doc, type, text, text);
-						// set offset at the start of the word (ignore the
-						// whitespace before it)
-						temp.setOffset(var.getOffset() + (var.getLength() - text.length()));
-						temp.setLength(var.getLength());
-						results.add(temp);
+						String text = doc.get(var.getOffset(), var.getLength());
+						// use the group from regex as label for the tree item
+						Matcher matcher = p.matcher(text);
+						matcher.matches(); // will match always, we just need
+						// capture the group
+						if (matcher.groupCount() > 0)
+							text = matcher.group(1).trim();
+						else
+							text = text.substring(text.indexOf(" ")).trim();
+
+						if (!isInsideBrackets || ignoreBrackets)
+						{
+							TreeItem temp = new TreeItem(doc, type, text, text);
+							// set offset at the start of the word (ignore the
+							// whitespace before it)
+							temp.setOffset(var.getOffset() + (var.getLength() - text.length()));
+							temp.setLength(var.getLength());
+							results.add(temp);
+						}
 					}
 				}
 			}
-			catch (BadLocationException e)
+			catch (Exception e)
 			{
 				e.printStackTrace();
 			}
@@ -285,13 +288,13 @@ public class OutlineContentProvider implements ITreeContentProvider
 		ArrayList results = new ArrayList();
 		int docLength = documentProvider.getDocument(inputElement).getLength();
 		IDocument doc = documentProvider.getDocument(inputElement);
-		List namespaces = getTopElements(doc, "^\\s*namespace\\s*\\w*", 0, docLength, TreeItem.ITEM_TYPE.NAMESPACE);
-		List classes = getTopElements(doc, "^\\s*class\\s*\\w+\\s", 0, docLength, TreeItem.ITEM_TYPE.CLASS);
-		List globals = getTopElements(doc, "our\\s*\\$\\w*", 0, docLength, TreeItem.ITEM_TYPE.VARIABLE);
+		List namespaces = getTopElements(doc, "^\\s*namespace\\s*(\\w*)", 0, docLength, TreeItem.ITEM_TYPE.NAMESPACE);
+		List classes = getTopElements(doc, "^\\s*class\\s*(\\w+)\\s", 0, docLength, TreeItem.ITEM_TYPE.CLASS);
+		List globals = getTopElements(doc, "our\\s*\\$(\\w*)", 0, docLength, TreeItem.ITEM_TYPE.VARIABLE);
 		// constants can be defined in namespaces
 		List consts = getTopElements(doc, "const\\s*(\\w*).*=.*", 0, docLength, TreeItem.ITEM_TYPE.CONSTANT);
 		// functions can be defined in classes as well (methods)
-		List subs = getTopElements(doc, "^\\s*sub\\s.*\\)", 0, docLength, TreeItem.ITEM_TYPE.FUNCTION);
+		List subs = getTopElements(doc, "^\\s*sub\\s(.*\\))", 0, docLength, TreeItem.ITEM_TYPE.FUNCTION);
 
 		results.addAll(namespaces);
 		results.addAll(classes);

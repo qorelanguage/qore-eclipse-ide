@@ -166,8 +166,10 @@ public class QoreCompletionSuggester
 				lastOffset = var.getOffset();
 
 			// now try to find find out if we are inside a sub or not
-			int openingBrackets = ParserHelper.getBracketCountBackwards(finder, offset, lastOffset, "\\{");
-			int closingBrackets = ParserHelper.getBracketCountBackwards(finder, offset, lastOffset, "\\}");
+			//int openingBrackets = ParserHelper.getBracketCountBackwards(finder, offset, lastOffset, "\\{");
+			//int closingBrackets = ParserHelper.getBracketCountBackwards(finder, offset, lastOffset, "\\}");
+			int openingBrackets = ParserHelper.getBracketCountBackwards(document, offset, lastOffset, '{');
+			int closingBrackets = ParserHelper.getBracketCountBackwards(document, offset, lastOffset, '}');
 			if (openingBrackets > closingBrackets) // the we are inside of a sub
 			{
 				isInsideSub = true;

@@ -12,7 +12,7 @@ public class QorePartitionScanner extends RuleBasedPartitionScanner {
 
 		IToken comment = new Token(COMMENT);
 		
-		ArrayList rules = new ArrayList();
+		ArrayList<PatternRule> rules = new ArrayList<PatternRule>();
 
 		// Add rule for double-quoted strings to make sure they are picked up by the QoreScanner
 		rules.add(new MultiLineRule("\"", "\"", Token.UNDEFINED, '\\'));

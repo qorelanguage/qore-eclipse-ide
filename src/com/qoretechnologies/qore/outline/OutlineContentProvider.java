@@ -1,7 +1,6 @@
 package com.qoretechnologies.qore.outline;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -18,9 +17,7 @@ import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.ui.texteditor.IDocumentProvider;
 
-import com.qoretechnologies.qore.completion.QoreCompletionElement;
 import com.qoretechnologies.qore.tools.ParserHelper;
-import com.qoretechnologies.qore.tools.ResourceLoader;
 
 public class OutlineContentProvider implements ITreeContentProvider
 {

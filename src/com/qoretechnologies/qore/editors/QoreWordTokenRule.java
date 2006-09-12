@@ -26,7 +26,7 @@ public class QoreWordTokenRule implements IRule {
     /** the token to be returned when a namespace specifier is found */
 	private IToken tNamespace;
     /** the hash map of keywords */
-	protected Map keywords = new HashMap();
+	protected Map<String,Object> keywords = new HashMap<String,Object>();
     /** the buffer for the word being scanned */
 	private StringBuffer buf = new StringBuffer();
 

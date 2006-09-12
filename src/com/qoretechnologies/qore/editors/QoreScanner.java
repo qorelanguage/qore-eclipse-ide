@@ -33,7 +33,7 @@ public class QoreScanner extends RuleBasedScanner {
 		IToken namespace  = new Token(new TextAttribute(manager.getColor(IQoreColorConstants.NAMESPACE), null, SWT.ITALIC));
 		IToken other      = new Token(new TextAttribute(manager.getColor(IQoreColorConstants.DEFAULT)));
 
-		ArrayList rules = new ArrayList();
+		ArrayList<IRule> rules = new ArrayList<IRule>();
 
 		// Add rule for double quotes
 		rules.add(new MultiLineRule("\"", "\"", string, '\\'));

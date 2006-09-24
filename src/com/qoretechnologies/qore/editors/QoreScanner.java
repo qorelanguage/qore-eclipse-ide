@@ -17,7 +17,7 @@ public class QoreScanner extends RuleBasedScanner {
 		"NULL", "our", "pop", "private", "push", "rethrow", "return", 
 		"splice", "shift", "sortBy", "sortDescendingBy", "switch", "sub", 
 		"subcontext", "summarize", "synchronized", "thread_exit", 
-		"throw", "try", "unshift", "where", "while",
+		"throw", "try", "unshift", "where", "while", "chomp"
 	}; 
 
 	public QoreScanner(ColorManager manager) {

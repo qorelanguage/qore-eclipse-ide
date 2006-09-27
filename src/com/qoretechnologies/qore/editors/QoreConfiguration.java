@@ -3,7 +3,6 @@ package com.qoretechnologies.qore.editors;
 import org.eclipse.jface.text.DefaultIndentLineAutoEditStrategy;
 import org.eclipse.jface.text.IAutoEditStrategy;
 import org.eclipse.jface.text.IDocument;
-import org.eclipse.jface.text.ITextDoubleClickStrategy;
 import org.eclipse.jface.text.TextAttribute;
 import org.eclipse.jface.text.contentassist.ContentAssistant;
 import org.eclipse.jface.text.contentassist.IContentAssistProcessor;
@@ -18,7 +17,7 @@ import org.eclipse.jface.text.source.SourceViewerConfiguration;
 import com.qoretechnologies.qore.completion.QoreCompletionProcessor;
 
 public class QoreConfiguration extends SourceViewerConfiguration {
-	private QoreDoubleClickStrategy doubleClickStrategy;
+	//private QoreDoubleClickStrategy doubleClickStrategy;
 
 	private QoreScanner scanner;
 
@@ -45,12 +44,13 @@ public class QoreConfiguration extends SourceViewerConfiguration {
 				QorePartitionScanner.COMMENT, };
 	}
 
-	public ITextDoubleClickStrategy getDoubleClickStrategy(
+	// TODO - fix the QoreDoubleClickStrategy class
+	/*public ITextDoubleClickStrategy getDoubleClickStrategy(
 			ISourceViewer sourceViewer, String contentType) {
 		if (doubleClickStrategy == null)
 			doubleClickStrategy = new QoreDoubleClickStrategy();
 		return doubleClickStrategy;
-	}
+	}*/
 
 	protected QoreScanner getQoreScanner() {
 		if (scanner == null) {

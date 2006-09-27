@@ -4,9 +4,16 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.debug.ui.DebugUITools;
+import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.console.ConsolePlugin;
 import org.eclipse.ui.console.IConsole;
+import org.eclipse.ui.console.IConsoleConstants;
 import org.eclipse.ui.console.IConsoleManager;
+import org.eclipse.ui.console.IConsoleView;
 import org.eclipse.ui.console.MessageConsole;
 
 public class EclipseTools
@@ -31,6 +38,7 @@ public class EclipseTools
 
 		currentCons = new MessageConsole("Qore", null);
 		conMan.addConsoles(new IConsole[] { currentCons });
+		conMan.showConsoleView(currentCons);
 		return currentCons;
 	}
 
@@ -46,7 +54,9 @@ public class EclipseTools
 
 	/**
 	 * Gets absolute path of the file currently opened in active editor.
-	 * @return absolute path to currently edited resource or null of no resource is selected
+	 * 
+	 * @return absolute path to currently edited resource or null of no resource
+	 *         is selected
 	 */
 	public static String getSelectedFileAbsolutePath()
 	{

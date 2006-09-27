@@ -11,7 +11,7 @@ public class QoreScriptShortcut implements ILaunchShortcut
 
 	public void launch(ISelection selection, String mode)
 	{
-		String relativePath = selection.toString().substring(selection.toString().indexOf('/'));
+		String relativePath = selection.toString().substring(selection.toString().indexOf('/'),selection.toString().length()-1);
 		String absolutePath = EclipseTools.convertPathToAbsolute(relativePath);
 		QoreRunner.executeQore(absolutePath, null);
 	}

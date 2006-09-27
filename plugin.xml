@@ -6,8 +6,8 @@
          point="org.eclipse.ui.editors">
       <editor
             name="Qore Editor"
-            extensions="q,qc,qore"
-            icon="icons/sample.gif"
+            extensions="q,qc,qore,qfd,qsd,qconst"
+            icon="icons/qore.gif"
             contributorClass="org.eclipse.ui.texteditor.BasicTextEditorActionContributor"
             class="com.qoretechnologies.qore.editors.QoreEditor"
             id="com.qoretechnologies.qore.editors.QoreEditor">
@@ -16,12 +16,63 @@
    <extension
          point="org.eclipse.core.runtime.contentTypes">
       <content-type
-            base-type="org.eclipse.core.runtime.text"
+            priority="high"
             default-charset="UTF-8"
-            file-extensions="q,qc,qore"
+            file-extensions="q,qc,qore,qfd,qsd,qconst"
             id="com.qoretechnologies.qore.qore-content-type"
-            name="com.qoretechnologies.qore.qore-content-type"
-            priority="normal"/>
+            name="com.qoretechnologies.qore.qore-content-type"/>
    </extension>
+   
+   <extension point="org.eclipse.debug.core.launchConfigurationTypes">
+	<launchConfigurationType
+	   	   id="com.qoretechnologies.qore.launching.LocalQoreScript"
+		   name="Qore script"
+		   delegate="com.qoretechnologies.qore.launching.QoreScriptLaunchConfigurationDelegate"
+		   modes= "run">
+	   </launchConfigurationType>         
+   </extension>
+   
+	<extension point="org.eclipse.debug.ui.launchConfigurationTypeImages">
+	    <launchConfigurationTypeImage
+	        icon="icons/qore.gif"
+	        configTypeID="com.qoretechnologies.qore.launching.LocalQoreScript"
+	        id="com.qoretechnologies.qore.launching.LocalQoreScriptTypeImage">
+	    </launchConfigurationTypeImage>
+	</extension>   
+	
+	<extension point="org.eclipse.debug.ui.launchConfigurationTabGroups">
+	    <launchConfigurationTabGroup
+	        type="com.qoretechnologies.qore.launching.LocalQoreScript"
+	        class="com.qoretechnologies.qore.launching.QoreScriptTabGroup"
+	        id="com.qoretechnologies.qore.launching.QoreScriptTabGroup.QoreScript">
+	    </launchConfigurationTabGroup>
+	</extension>
+	
+	<extension point="org.eclipse.debug.ui.launchShortcuts">
+	    <shortcut
+	        id="com.qoretechnologies.qore.launching.QoreScriptShortcut"
+	        class="com.qoretechnologies.qore.launching.QoreScriptShortcut"
+	        label="Qore script"
+	        icon="icons/qore.gif"
+	        modes="run">
+		<contextualLaunch>
+           <enablement>
+             <with variable="selection">
+               <count value="1"/>
+               <iterate> 
+                 <or>
+                   <test property="org.eclipse.debug.ui.matchesPattern" value="*.q"/>
+                   <test property="org.eclipse.debug.ui.matchesPattern" value="*.qc"/>
+                   <test property="org.eclipse.debug.ui.matchesPattern" value="*.qore"/>
+                   <test property="org.eclipse.debug.ui.matchesPattern" value="*.qfd"/>
+                   <test property="org.eclipse.debug.ui.matchesPattern" value="*.qsd"/>
+                   <test property="org.eclipse.debug.ui.matchesPattern" value="*.qconst"/>
+                 </or>
+               </iterate>
+             </with>
+           </enablement>
+  		 </contextualLaunch>
+ 	    </shortcut>
+	</extension>	
 
 </plugin>

@@ -9,13 +9,22 @@ import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import org.eclipse.core.resources.IMarker;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.debug.ui.DebugUITools;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.console.MessageConsoleStream;
+import org.eclipse.ui.texteditor.MarkerUtilities;
 
 import com.qoretechnologies.qore.tools.EclipseTools;
 
@@ -27,6 +36,10 @@ public class QoreRunner
 
 	private final static Color CONSOLE_BLUE = new Color(Display.getDefault(), new RGB(0, 0, 255));
 
+	private final static Pattern patternQoreExcLine = Pattern.compile("unhandled QORE System exception thrown at .*:(\\d+)");
+
+	private final static Pattern patternQoreExcInfo = Pattern.compile("(.*EXCEPTION): (.*)");
+
 	public static void executeQore(String scriptFile, Map<String, Object> cmdLineOptions)
 	{
 		// check the scriptFile
@@ -37,6 +50,7 @@ public class QoreRunner
 			out.println("There is nothing to run by qore. Please select or open a source file.");
 			return;
 		}
+
 		// prepare the command
 		List<String> qoreCmdLineElements = new ArrayList<String>();
 		qoreCmdLineElements.add(QORE_EXECUTABLE);
@@ -66,6 +80,16 @@ public class QoreRunner
 		out.setColor(CONSOLE_BLACK);
 		out.println(SimpleDateFormat.getDateTimeInstance().format(new Date()) + ": Executing: " + cmdLine + "");
 
+		// delete the old problem markers
+		try
+		{
+			ResourcesPlugin.getWorkspace().getRoot().deleteMarkers(null,true,IResource.DEPTH_INFINITE);
+		}
+		catch (CoreException e1)
+		{
+			// nada
+		}
+
 		// construct & start the process
 		ProcessBuilder pb = new ProcessBuilder(qoreCmdLineElements);
 		pb.redirectErrorStream(true);
@@ -77,8 +101,31 @@ public class QoreRunner
 			String s;
 			out = EclipseTools.getConsole().newMessageStream();
 			out.setColor(CONSOLE_BLUE);
+
+			QoreException qe = new QoreException();
 			while ((s = is.readLine()) != null)
+			{
 				out.println(s);
+				// try to parse the line to get QoreException instance
+				fillQoreExceptionFromLine(qe, s);
+				if (qe.isComplete()) // then create the marker for the error
+										// in the source file
+				{
+					try
+					{
+						HashMap<String, Object> map = new HashMap<String, Object>();
+						MarkerUtilities.setLineNumber(map, qe.getLine());
+						MarkerUtilities.setMessage(map, qe.getDescription());
+						map.put(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
+						MarkerUtilities.createMarker(DebugUITools.getSelectedResource(), map, IMarker.PROBLEM);
+					}
+					catch (CoreException e)
+					{
+						// do nothing if the marker cannot be created
+					}
+					qe = new QoreException();
+				}
+			}
 			long endTms = System.currentTimeMillis();
 			try
 			{
@@ -99,6 +146,22 @@ public class QoreRunner
 			out = EclipseTools.getConsole().newMessageStream();
 			out.setColor(CONSOLE_RED);
 			out.println("Error during execution: " + e.getMessage());
+		}
+	}
+
+	private static void fillQoreExceptionFromLine(QoreException qe, String line)
+	{
+		Matcher m = patternQoreExcLine.matcher(line);
+		if (m.matches())
+			qe.setLine(Integer.parseInt(m.group(1)));
+		else
+		{
+			m = patternQoreExcInfo.matcher(line);
+			if (m.matches())
+			{
+				qe.setExceptionType(m.group(1));
+				qe.setDescription(m.group(2));
+			}
 		}
 	}
 

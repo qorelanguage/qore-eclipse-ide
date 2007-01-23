@@ -75,4 +75,39 @@
  	    </shortcut>
 	</extension>	
 
+	<extension point="org.eclipse.ui.commands">
+	   <command categoryId="org.eclipse.jdt.ui.category.source"
+	            description="%jdt.ui.ToggleMarkOccurrences.description"
+	            id="org.eclipse.jdt.ui.edit.text.java.toggleMarkOccurrences"
+	            name="%jdt.ui.ToggleMarkOccurrences.name">
+<!-- 	     <state id="NAME" class="org.eclipse.jface.menus.TextState" />
+	     <state id="STYLE" class="org.eclipse.jface.commands.ToggleState:true" /> -->
+	   </command>
+	</extension>
+
+	<extension point="org.eclipse.ui.handlers">
+	   <handler commandId="org.eclipse.jdt.ui.edit.text.java.toggleMarkOccurrences"
+	            class="org.eclipse.jdt.internal.ui.javaeditor.ToggleMarkOccurrencesHandler">
+	     <activeWhen>
+	       <with variable="activePartId">
+	         <or>
+	           <equals value="com.qoretechnologies.qore.editors.QoreEditor" />
+	         </or>
+	       </with>
+	     </activeWhen>
+	   </handler>
+	 </extension>
+ <extension
+       point="org.eclipse.ui.popupMenus">
+    <objectContribution
+          id="com.qoretechnologies.qore.menudoccontribution"
+          nameFilter="*.q*"
+          objectClass="org.eclipse.core.resources.IFile">
+       <action
+             class="com.qoretechnologies.qore.actions.GenerateDocAction"
+             id="com.qoretechnologies.qore.GenerateDocAction"
+             label="Generate Qore documentation"/>
+    </objectContribution>
+ </extension>
+ 
 </plugin>

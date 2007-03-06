@@ -6,7 +6,7 @@
          point="org.eclipse.ui.editors">
       <editor
             name="Qore Editor"
-            extensions="q,qc,qore,qfd,qsd,qconst"
+            extensions="q,qc,qore,qfd,qsd,qconst,ql,qclass,qwf"
             icon="icons/qore.gif"
             contributorClass="org.eclipse.ui.texteditor.BasicTextEditorActionContributor"
             class="com.qoretechnologies.qore.editors.QoreEditor"

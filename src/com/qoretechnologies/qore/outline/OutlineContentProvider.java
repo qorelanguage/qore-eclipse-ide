@@ -285,13 +285,13 @@ public class OutlineContentProvider implements ITreeContentProvider
 		ArrayList results = new ArrayList();
 		int docLength = documentProvider.getDocument(inputElement).getLength();
 		IDocument doc = documentProvider.getDocument(inputElement);
-		List namespaces = getTopElements(doc, "^\\s*namespace\\s*(\\w*)", 0, docLength, TreeItem.ITEM_TYPE.NAMESPACE);
-		List classes = getTopElements(doc, "^\\s*class\\s*(\\w+)\\s", 0, docLength, TreeItem.ITEM_TYPE.CLASS);
-		List globals = getTopElements(doc, "our\\s*\\$(\\w*)", 0, docLength, TreeItem.ITEM_TYPE.VARIABLE);
+		List namespaces = getTopElements(doc, "^\\s*namespace\\s*(\\w*)", 0, docLength, TreeItem.ITEM_TYPE.NAMESPACE,true);
+		List classes = getTopElements(doc, "^\\s*class\\s*(\\w+)\\s", 0, docLength, TreeItem.ITEM_TYPE.CLASS,true);
+		List globals = getTopElements(doc, "our\\s*\\$(\\w*)", 0, docLength, TreeItem.ITEM_TYPE.VARIABLE,true);
 		// constants can be defined in namespaces
 		List consts = getTopElements(doc, "const\\s*(\\w*).*=.*", 0, docLength, TreeItem.ITEM_TYPE.CONSTANT);
 		// functions can be defined in classes as well (methods)
-		List subs = getTopElements(doc, "^\\s*sub\\s(.*\\))", 0, docLength, TreeItem.ITEM_TYPE.FUNCTION);
+		List subs = getTopElements(doc, "^\\s*sub\\s(.*\\))", 0, docLength, TreeItem.ITEM_TYPE.FUNCTION,true);
 
 		results.addAll(namespaces);
 		results.addAll(classes);
